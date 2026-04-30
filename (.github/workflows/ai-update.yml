@@ -1,0 +1,18 @@
+name: NEXUS OS AI Update
+on:
+  schedule: [{ cron: "0 9 * * *" }]   # every day at 9am UTC
+  workflow_dispatch:                   # manual "Run workflow" button
+  push:
+    paths: ["uploads/**"]
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install feedparser requests
+      - run: python scripts/update-dashboard.py
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with: { commit_message: "🤖 AI Swarm Updated Dashboard" }
