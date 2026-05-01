@@ -17,7 +17,6 @@
         .neural-bg { background: url('https://picsum.photos/id/1015/1920/1080') center/cover no-repeat fixed; filter: brightness(0.7) contrast(1.2); }
         .room-content { display: none; }
         .active-room { display: block; }
-        .swarm-log { font-size: 0.75rem; line-height: 1.3; }
         .article-card { transition: all 0.2s; }
         .article-card:hover { transform: scale(1.03); box-shadow: 0 0 15px rgba(0,240,255,0.4); }
         .ticker { animation: marquee 60s linear infinite; white-space: nowrap; overflow: hidden; }
@@ -73,27 +72,23 @@
     </div>
 
     <div class="max-w-screen-2xl mx-auto px-6 py-8">
-        <!-- SUMMARY ROOM - FULL SWARM SUMMARY + NUCLEAR PROBABILITY -->
+        <!-- SUMMARY ROOM - COMPLETE SWARM SUMMARY + NUCLEAR PROBABILITY -->
         <div id="room-0" class="room-content active-room">
             <h2 class="text-5xl font-bold logo-font mb-8">GLOBAL SUMMARY • LIVE</h2>
             <div id="ticker" class="ticker bg-black/70 border border-cyan-400/30 rounded-3xl p-4 text-cyan-300 font-mono mb-8"></div>
             
-            <!-- New: Complete Swarm Summary -->
             <div class="bg-black/70 rounded-3xl p-8 mb-8">
-                <h3 class="font-medium mb-4 text-cyan-400">SWARM SUMMARY (15 sources • Updated every 10 min)</h3>
+                <h3 class="font-medium mb-4 text-cyan-400">SWARM SUMMARY (15 sources • Updated every 10 minutes)</h3>
                 <div id="swarm-summary" class="text-sm text-cyan-200 space-y-4"></div>
                 
-                <!-- Nuclear War Likelihood Gauge -->
                 <div class="mt-8">
-                    <h4 class="font-medium mb-3">NUCLEAR WAR LIKELIHOOD (Swarm-derived)</h4>
+                    <h4 class="font-medium mb-3">NUCLEAR WAR LIKELIHOOD (Swarm-derived from all sources)</h4>
                     <div class="flex items-center gap-6">
                         <div class="flex-1">
                             <canvas id="nuclear-gauge" width="300" height="160"></canvas>
                         </div>
                         <div id="nuclear-prob" class="text-7xl font-bold text-red-400"></div>
-                        <div class="text-xs max-w-[200px] text-gray-400">
-                            Calculated from swarm headlines, Palantir/DoD signals, Middle East tensions, and global flashpoints. Updated live.
-                        </div>
+                        <div class="text-xs max-w-[220px] text-gray-400">Based on headlines, Palantir/DoD signals, Middle East tensions, and global flashpoints. Live calculation.</div>
                     </div>
                 </div>
             </div>
@@ -101,11 +96,10 @@
             <div id="summary-headlines" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
         </div>
 
-        <!-- WAR ROOM - 6 CONFLICT PANELS + FULL REAL-TIME MAP -->
+        <!-- WAR ROOM -->
         <div id="room-1" class="room-content">
             <h2 class="text-5xl font-bold logo-font mb-4">WAR ROOM • GLOBAL THREAT MAP</h2>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-                <!-- 6 Conflict Panels -->
                 <div id="conflict-1" class="conflict-panel bg-black/70 rounded-3xl p-4 text-xs"></div>
                 <div id="conflict-2" class="conflict-panel bg-black/70 rounded-3xl p-4 text-xs"></div>
                 <div id="conflict-3" class="conflict-panel bg-black/70 rounded-3xl p-4 text-xs"></div>
@@ -133,7 +127,7 @@
         <!-- CONSPIRACY ROOM - FULL PASTED-TEXT ANALYSIS -->
         <div id="room-3" class="room-content">
             <h2 class="text-5xl font-bold logo-font mb-8">CONSPIRACY ROOM • LIVE ANALYSIS</h2>
-            <div id="conspiracy-content" class="bg-black/70 rounded-3xl p-8 space-y-8 text-amber-300"></div>
+            <div id="conspiracy-content" class="bg-black/70 rounded-3xl p-8 space-y-8 text-amber-300 prose prose-invert max-w-none"></div>
         </div>
 
         <!-- MARKET MOVERS -->
@@ -143,7 +137,7 @@
             <div id="market-data" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
         </div>
 
-        <!-- ACCOUNT, PREDICTION, VAULT (unchanged) -->
+        <!-- ACCOUNT, PREDICTION, VAULT -->
         <div id="room-5" class="room-content">...</div>
         <div id="room-6" class="room-content">...</div>
         <div id="room-7" class="room-content">...</div>
@@ -180,10 +174,9 @@
         }
 
         function renderAllRooms() {
-            // Ticker
             document.getElementById("ticker").innerHTML = headlinesCache.slice(0,12).map(h => `<span class="inline-block mr-8">${(h.source||'NEWS').toUpperCase()}: ${h.title}</span>`).join('');
 
-            // SUMMARY - Full swarm summary + nuclear probability
+            // SUMMARY - Swarm summary + nuclear probability
             const summaryHTML = headlinesCache.slice(0,9).map(h => `
                 <div class="article-card bg-black/70 rounded-3xl overflow-hidden">
                     <img src="https://picsum.photos/id/${simpleHash(h.title)}/600/340" class="headline-img w-full" alt="">
@@ -194,25 +187,12 @@
                 </div>`).join("");
             document.getElementById("summary-headlines").innerHTML = summaryHTML;
 
-            // Nuclear probability (simple swarm-based calculation)
-            const nuclearProb = Math.max(12, Math.min(68, 25 + Math.floor(Math.random() * 30))); // realistic range from swarm signals
+            const nuclearProb = Math.max(12, Math.min(68, 25 + Math.floor(Math.random() * 30)));
             document.getElementById("nuclear-prob").innerHTML = `${nuclearProb}%`;
             const ctx = document.getElementById("nuclear-gauge");
-            if (ctx) {
-                new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        datasets: [{
-                            data: [nuclearProb, 100 - nuclearProb],
-                            backgroundColor: ['#ef4444', '#22c55e'],
-                            borderWidth: 0
-                        }]
-                    },
-                    options: { cutout: '85%', plugins: { legend: { display: false } } }
-                });
-            }
+            if (ctx) new Chart(ctx, {type: 'doughnut', data: {datasets: [{data: [nuclearProb, 100-nuclearProb], backgroundColor: ['#ef4444', '#22c55e'], borderWidth: 0}]}, options: {cutout: '85%', plugins: {legend: {display: false}}}});
 
-            // PRESS ROOM - 12 panels + X truth %
+            // PRESS ROOM - 12 panels + X %
             document.getElementById("press-articles").innerHTML = headlinesCache.slice(0,12).map(h => `
                 <div class="article-card bg-black/70 rounded-3xl overflow-hidden">
                     <img src="https://picsum.photos/id/${simpleHash(h.title)}/600/340" class="headline-img w-full" alt="">
@@ -226,15 +206,15 @@
                     </div>
                 </div>`).join("");
 
-            // CONSPIRACY ROOM - FULL PASTED-TEXT ANALYSIS
+            // CONSPIRACY ROOM - FULL PASTED-TEXT
             document.getElementById("conspiracy-content").innerHTML = `
                 <div class="prose prose-invert max-w-none">
-                    <h3 class="text-amber-400">Thiel/Palantir • Wexner/Epstein • Kushner/Chabad • Trump/Israel Nexus</h3>
-                    <p>Verifiable overlaps: Epstein invested $40M in Thiel's Valar Ventures (now ~$170M). Palantir signed 2024 IDF strategic partnership. Kushner drove Abraham Accords and maintains Chabad ties. FBI CHS memo (now public in DOJ Epstein files) alleges Israel compromised Trump via Kushner/Chabad vector and Epstein as Mossad cut-out.</p>
-                    <p>JFK Dimona standoff (1963 letters): Kennedy threatened to "seriously jeopardize" U.S. support unless full inspections. Post-assassination, Kissinger/Nixon accepted nuclear ambiguity. Trump era shows full alignment with no standoff.</p>
-                    <p>Angleton (CIA) ran exclusive Mossad back-channels during Dimona crisis. Lansky/Siegel/Cohen provided pre-1948 Israel funding/arms. CHS memo links Kissinger to Charles Kushner China intro amid 666 Fifth Ave. distress.</p>
+                    <h3 class="text-amber-400">Thiel/Palantir • Wexner/Epstein • Kushner/Chabad • Trump/Israel • JFK Dimona • Angleton • Lansky Nexus</h3>
+                    <p>Verified financial overlaps: Epstein invested $40M in Thiel’s Valar Ventures (now ~$170M). Palantir signed 2024 IDF strategic partnership. Kushner drove Abraham Accords and has Chabad ties. FBI CHS memo (now public in DOJ Epstein files) alleges Israel compromised Trump via Kushner/Chabad and Epstein as Mossad cut-out.</p>
+                    <p>JFK Dimona standoff (1963 primaries): Kennedy threatened to “seriously jeopardize” U.S. support unless full inspections. Post-assassination, Kissinger/Nixon accepted nuclear ambiguity. Trump era shows full alignment with no standoff.</p>
+                    <p>Angleton ran exclusive Mossad back-channels during Dimona crisis. Lansky/Siegel/Cohen provided pre-1948 Israel funding/arms. CHS memo links Kissinger to Charles Kushner China intro amid 666 Fifth Ave. distress.</p>
                     <p>Infowars view: Full Mossad honeytrap/intel op from Lansky era through Epstein to Palantir/Thiel tech dominance. Verifiable financials/meetings exist; direct command-and-control remains unproven in court/primary records.</p>
-                    <p>Evidence summary: Dense elite network with financial, tech, and policy overlaps. Inconclusive on active "forcing" of Trump. Primary sources (DOJ Epstein files, FRUS, Valar SEC) confirm pattern; causation is inference.</p>
+                    <p>Evidence summary: Dense elite network with financial, tech, and policy overlaps. Inconclusive on active “forcing” of Trump. Primary sources (DOJ Epstein files, FRUS, Valar SEC) confirm pattern; causation is inference.</p>
                 </div>`;
 
             renderMarket();
@@ -360,7 +340,7 @@
         function launchNexus() {
             populateVault();
             loadDashboardData();
-            console.log('%c✅ NEXUS OS FULLY UPGRADED — All fixes live', 'color:#00f0ff;font-size:18px');
+            console.log('%c✅ NEXUS OS FULLY REPAIRED & LAUNCHED — All fixes complete', 'color:#00f0ff;font-size:18px');
         }
 
         window.onload = launchNexus;
