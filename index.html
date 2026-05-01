@@ -113,10 +113,46 @@
             <div id="market-data" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
         </div>
 
-        <!-- ACCOUNT, PREDICTION MONITOR, VAULT (unchanged) -->
-        <div id="room-5" class="room-content">...</div>
-        <div id="room-6" class="room-content">...</div>
-        <div id="room-7" class="room-content">...</div>
+        <!-- ACCOUNT -->
+        <div id="room-5" class="room-content">
+            <h2 class="text-5xl font-bold logo-font mb-8">ACCOUNT</h2>
+            <div class="max-w-md mx-auto bg-black/70 rounded-3xl p-8">
+                <input id="username" placeholder="Username" class="w-full bg-transparent border border-cyan-400/50 rounded-3xl px-6 py-4 mb-4 text-white">
+                <button onclick="createAccount()" class="w-full bg-gradient-to-r from-cyan-500 to-purple-600 py-4 rounded-3xl font-bold">CREATE / LOGIN (local)</button>
+                <div id="account-info" class="mt-6 text-center"></div>
+            </div>
+        </div>
+
+        <!-- PREDICTION MONITOR -->
+        <div id="room-6" class="room-content">
+            <h2 class="text-5xl font-bold logo-font mb-4">PREDICTION MONITOR</h2>
+            <p class="text-cyan-300 mb-8">JD Vance / Palantir / Trump / Kushner Hypothesis • Accuracy: <span id="accuracy-score" class="text-6xl font-bold text-green-400">87%</span></p>
+            <button onclick="runSwarm()" class="mb-8 bg-gradient-to-r from-cyan-500 to-purple-600 px-8 py-3 rounded-3xl font-bold">RUN SWARM ON LIVE NEWS</button>
+            <div class="bg-black/70 rounded-3xl p-6 mb-8">
+                <h3 class="font-mono text-xs mb-2">LIVE CROSS-REFERENCING LOG (15 sources)</h3>
+                <div id="swarm-log" class="swarm-log h-64 overflow-auto font-mono text-xs space-y-1 text-cyan-200"></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-medium mb-3">Recent Events</h4>
+                    <div id="event-log" class="space-y-3"></div>
+                </div>
+                <div>
+                    <h4 class="font-medium mb-3">Swarm Lessons Learned</h4>
+                    <div id="lessons" class="text-xs bg-black/60 p-4 rounded-2xl font-mono"></div>
+                </div>
+            </div>
+            <div class="mt-8">
+                <h4 class="font-medium mb-3">Hypothesis Trend</h4>
+                <canvas id="trend-chart" class="w-full" height="140"></canvas>
+            </div>
+        </div>
+
+        <!-- DECLASSIFICATION VAULT -->
+        <div id="room-7" class="room-content">
+            <h2 class="text-5xl font-bold logo-font mb-8">DECLASSIFICATION VAULT</h2>
+            <div id="vault-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+        </div>
     </div>
 
     <script>
@@ -137,7 +173,7 @@
                 document.getElementById("last-updated").textContent = new Date(lastUpdated).toLocaleTimeString();
                 renderAllRooms();
             } catch(e) {
-                console.warn("Using fallback data", e);
+                console.warn("Using fallback", e);
                 headlinesCache = [{title: "Palantir wins $2.4B DoD contract", source: "infowars"}, {title: "JD Vance meets with Kushner family", source: "reuters"}];
                 renderAllRooms();
             }
