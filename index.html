@@ -24,6 +24,7 @@
         @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-100%); } }
         .market-card { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         .market-card:hover { transform: translateY(-2px); box-shadow: 0 0 25px -5px rgb(34 211 238); }
+        #war-map { height: 600px; }
     </style>
 </head>
 <body class="text-white min-h-screen neural-bg overflow-x-hidden">
@@ -77,7 +78,7 @@
             <div id="summary-headlines" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
         </div>
 
-                <!-- WAR ROOM — REAL-TIME MULTI-LAYER -->
+        <!-- WAR ROOM — FULL REAL-TIME WITH SATELLITE -->
         <div id="room-1" class="room-content">
             <h2 class="text-5xl font-bold logo-font mb-4">WAR ROOM • GLOBAL THREAT MAP</h2>
             <div class="flex gap-3 mb-4 flex-wrap">
@@ -85,14 +86,16 @@
                 <button onclick="toggleLayer('weather')" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-medium transition">☁️ WEATHER</button>
                 <button onclick="toggleLayer('ships')" class="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-2xl text-sm font-medium transition">🚢 SHIPS</button>
                 <button onclick="toggleLayer('flights')" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-2xl text-sm font-medium transition">✈️ FLIGHTS</button>
+                <button onclick="toggleLayer('satellite')" class="px-5 py-2 bg-purple-600 hover:bg-purple-500 rounded-2xl text-sm font-medium transition">🛰️ SATELLITE</button>
             </div>
             <div id="war-map" class="h-[600px] rounded-3xl border border-red-500/50 overflow-hidden"></div>
-            <div class="text-xs text-cyan-400 mt-3 font-mono">Real-time AIS + ADS-B + Weather • Refreshes automatically</div>
+            <div class="text-xs text-cyan-400 mt-3 font-mono">Real-time AIS + ADS-B + Weather + Satellite • Auto-refresh</div>
         </div>
 
-        <!-- PRESS ROOM -->
+        <!-- PRESS ROOM — ENHANCED WITH MORE HEADLINES -->
         <div id="room-2" class="room-content">
             <h2 class="text-5xl font-bold logo-font mb-8">PRESS ROOM • LIVE ARTICLES</h2>
+            <p class="text-cyan-300 mb-6 text-sm">15-source AI Swarm • Updated every 10 minutes</p>
             <div id="press-articles" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
         </div>
 
@@ -102,10 +105,10 @@
             <div id="conspiracy-content" class="bg-black/70 rounded-3xl p-8 space-y-6 text-amber-300"></div>
         </div>
 
-        <!-- MARKET MOVERS — BEAUTIFUL SWARM MARKET PULSE DESIGN -->
+        <!-- MARKET MOVERS -->
         <div id="room-4" class="room-content">
             <h2 class="text-5xl font-bold logo-font mb-4">MARKET MOVERS • AI SWARM PREDICTIONS</h2>
-            <p class="text-cyan-300 mb-8 text-sm">15-source swarm consensus • 20+ live panels</p>
+            <p class="text-cyan-300 mb-8 text-sm">15-source swarm consensus • 20+ live panels • Last updated: <span id="last-updated">—</span></p>
             <div id="market-data" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
         </div>
 
@@ -138,7 +141,6 @@
                     <div id="lessons" class="text-xs bg-black/60 p-4 rounded-2xl font-mono"></div>
                 </div>
             </div>
-            <!-- Trend Chart -->
             <div class="mt-8">
                 <h4 class="font-medium mb-3">Hypothesis Trend</h4>
                 <canvas id="trend-chart" class="w-full" height="140"></canvas>
@@ -152,17 +154,11 @@
         </div>
     </div>
 
-        <script>
+    <script>
         let currentRoom = 0;
-        let accuracyScore = 87;
-        let swarmLogs = [];
-        let events = [];
-        let lessons = ["Multi-tier alignment detected on Palantir leverage", "Infowars divergence flagged vs. CIA Reading Room"];
         let headlinesCache = [];
         let marketData = [];
-        let trendChartInstance = null;
         let lastUpdated = "";
-
         let map = null;
         let layers = {};
 
@@ -176,30 +172,52 @@
                 document.getElementById("last-updated").textContent = new Date(lastUpdated).toLocaleTimeString();
                 renderAllRooms();
             } catch(e) {
-                console.warn("Using fallback data", e);
+                console.warn("Using fallback", e);
                 headlinesCache = [{title: "Palantir wins $2.4B DoD contract", source: "infowars"}, {title: "JD Vance meets with Kushner family", source: "reuters"}];
                 renderAllRooms();
             }
         }
 
+        function renderAllRooms() {
+            document.getElementById("ticker").innerHTML = headlinesCache.slice(0,12).map(h => `<span class="inline-block mr-8">${(h.source||'NEWS').toUpperCase()}: ${h.title}</span>`).join('');
+            document.getElementById("summary-headlines").innerHTML = headlinesCache.slice(0,6).map(h => `<div class="article-card bg-black/70 rounded-3xl p-5 text-sm">${(h.source||'')}<br><a href="${h.link||'#'}" target="_blank" class="text-cyan-300">${h.title}</a></div>`).join("");
+            // PRESS ROOM - more headlines
+            document.getElementById("press-articles").innerHTML = headlinesCache.slice(0,20).map(h => `
+                <div class="article-card bg-black/70 rounded-3xl p-6">
+                    <div class="text-xs text-cyan-400 mb-2">${(h.source||'SWARM').toUpperCase()}</div>
+                    <a href="${h.link||'#'}" target="_blank" class="block text-lg font-medium leading-tight">${h.title}</a>
+                </div>`).join("");
+            document.getElementById("conspiracy-content").innerHTML = headlinesCache.filter(h => ["infowars","breitbart"].includes((h.source||''))).slice(0,5).map(h => `<div>🔥 ${(h.source||'').toUpperCase()} • ${h.title} <span class="text-amber-400">(divergence flagged)</span></div>`).join("");
+            renderMarket();
+        }
+
         function renderMarket() {
             const container = document.getElementById("market-data");
             const dataToUse = marketData.length ? marketData : [{symbol:"PLTR", name:"Palantir", price:42.85, change:4.8, prediction:"Bullish", confidence:92, reason:"DoD + Vance leverage"}];
-            container.innerHTML = dataToUse.map(m => { /* your market card code stays the same */ 
+            container.innerHTML = dataToUse.map(m => {
                 const isPositive = m.change >= 0;
                 const changeClass = isPositive ? 'text-emerald-400' : 'text-red-400';
                 const changePrefix = isPositive ? '+' : '';
                 const predClass = m.prediction === 'Bullish' ? 'text-emerald-400' : m.prediction === 'Bearish' ? 'text-red-400' : 'text-amber-400';
-                return `<div class="market-card bg-black/70 rounded-3xl p-5 border border-cyan-400/30 hover:border-cyan-400/70"> ... </div>`; // keep your existing renderMarket body
+                return `
+                <div class="market-card bg-black/70 rounded-3xl p-5 border border-cyan-400/30 hover:border-cyan-400/70">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="font-mono text-3xl tracking-[-1px]">${m.symbol}</div>
+                            <div class="text-xs text-cyan-300/90">${m.name}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-mono text-2xl">$${Number(m.price).toLocaleString()}</div>
+                            <div class="${changeClass} text-xl font-medium">${changePrefix}${m.change}%</div>
+                        </div>
+                    </div>
+                    <div class="mt-6 grid grid-cols-2 gap-4 text-xs border-t border-cyan-400/10 pt-4">
+                        <div><div class="text-cyan-300/70">PREDICTION</div><div class="${predClass} font-semibold">${m.prediction}</div></div>
+                        <div class="text-right"><div class="text-cyan-300/70">CONFIDENCE</div><div class="font-mono">${m.confidence}<span class="text-xs text-cyan-400/40">%</span></div></div>
+                    </div>
+                    <div class="mt-4 text-[10px] leading-tight text-gray-400">${m.reason}</div>
+                </div>`;
             }).join('');
-        }
-
-        function renderAllRooms() {
-            document.getElementById("ticker").innerHTML = headlinesCache.slice(0,12).map(h => `<span class="inline-block mr-8">${(h.source||'NEWS').toUpperCase()}: ${h.title}</span>`).join('');
-            document.getElementById("summary-headlines").innerHTML = headlinesCache.slice(0,6).map(h => `<div class="article-card bg-black/70 rounded-3xl p-5 text-sm">${(h.source||'')}<br><a href="${h.link||'#'}" target="_blank" class="text-cyan-300">${h.title}</a></div>`).join("");
-            document.getElementById("press-articles").innerHTML = headlinesCache.map(h => `<div class="article-card bg-black/70 rounded-3xl p-6"><div class="text-xs text-cyan-400 mb-1">${(h.source||'').toUpperCase()}</div><a href="${h.link||'#'}" target="_blank" class="block text-lg font-medium leading-tight">${h.title}</a></div>`).join("");
-            document.getElementById("conspiracy-content").innerHTML = headlinesCache.filter(h => ["infowars","breitbart"].includes((h.source||''))).slice(0,5).map(h => `<div>🔥 ${(h.source||'').toUpperCase()} • ${h.title} <span class="text-amber-400">(divergence flagged)</span></div>`).join("");
-            renderMarket();
         }
 
         function selectRoom(n) {
@@ -222,13 +240,13 @@
                 L.marker([48.5, 37.5]).bindPopup("<b>Ukraine Frontline</b><br>High Intensity"),
                 L.marker([31.4, 34.3]).bindPopup("<b>Gaza / Israel</b><br>Active"),
                 L.marker([15.5, 105.8]).bindPopup("<b>South China Sea</b><br>Naval Tension"),
-                L.marker([12.5, 25.0]).bindPopup("<b>Sudan</b><br>Civil War")
+                L.marker([12.5, 25.0]).bindPopup("<b>Sudan Civil War</b><br>Ongoing")
             ]).addTo(map);
 
             layers.weather = L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=YOUR_OPENWEATHER_KEY', { opacity: 0.7 });
-
             layers.ships = L.layerGroup();
             layers.flights = L.layerGroup();
+            layers.satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Esri', maxZoom: 19 });
 
             initAISStream();
             fetchOpenSkyFlights();
@@ -269,15 +287,34 @@
             map.hasLayer(layers[type]) ? map.removeLayer(layers[type]) : map.addLayer(layers[type]);
         }
 
-        async function runSwarm() { await loadDashboardData(); }
+        async function runSwarm() {
+            await loadDashboardData();
+        }
 
-        function createAccount() { /* your original */ }
-        function populateVault() { /* your original */ }
+        function createAccount() {
+            const username = document.getElementById("username").value || "Anonymous Patriot";
+            localStorage.setItem("nexusUser", username);
+            document.getElementById("account-info").innerHTML = `<div class="text-green-400">Logged in as <strong>${username}</strong></div>`;
+        }
+
+        function populateVault() {
+            const docs = [
+                {title:"FBI_Monograph_Fedayeen-Impact_1970.pdf", pages:67, date:"22-Jan-2009", desc:"Fedayeen impact analysis", link:"https://www.governmentattic.org/4docs/FBI_Monograph_Fedayeen-Impact_1970.pdf"},
+                {title:"ONRwarInNuclearAge1959.pdf", pages:141, date:"18-Nov-2022", desc:"War in the Nuclear Age symposium", link:"https://www.governmentattic.org/4docs/ONRwarInNuclearAge1959.pdf"},
+                {title:"FinCenFOIAlogs_2012-2020.pdf", pages:252, date:"23-Sep-2020", desc:"FinCEN FOIA case logs", link:"https://www.governmentattic.org/4docs/FinCenFOIAlogs_2012-2020.pdf"},
+                {title:"Israel SSG.pdf", pages:69, date:"25-Mar-2010", desc:"State Dept Self-Study Guide Israel", link:"https://www.governmentattic.org/4docs/IsraelSSG.pdf"},
+                {title:"DOSdetNukeTstsSmartPhones2014-2015.pdf", pages:49, date:"16-Apr-2026", desc:"Smartphone nuclear test detection", link:"https://www.governmentattic.org/4docs/DOSdetNukeTstsSmartPhones2014-2015.pdf"},
+                {title:"USSSfoiaLogsCY2022.pdf", pages:52, date:"22-Mar-2023", desc:"Secret Service FOIA logs 2022", link:"https://www.governmentattic.org/4docs/USSSfoiaLogsCY2022.pdf"},
+                {title:"ODNIfoiaLogs_2017-2020.pdf", pages:173, date:"14-Jan-2021", desc:"ODNI FOIA logs 2017-2020", link:"https://www.governmentattic.org/4docs/ODNIfoiaLogs_2017-2020.pdf"}
+            ];
+            const grid = document.getElementById("vault-grid");
+            grid.innerHTML = docs.map(d => `<div class="article-card bg-black/70 rounded-3xl p-6"><h4 class="font-bold">${d.title}</h4><p class="text-xs text-amber-300">${d.pages} pages • Released ${d.date} • ${d.desc}</p><a href="${d.link}" target="_blank" class="text-cyan-400 text-sm mt-3 block">↓ DOWNLOAD FULL PDF</a></div>`).join("");
+        }
 
         function launchNexus() {
             populateVault();
             loadDashboardData();
-            console.log('%c✅ NEXUS OS WAR ROOM LIVE — Real-time Ships + Flights + Weather', 'color:#00f0ff;font-size:18px');
+            console.log('%c✅ NEXUS OS FULLY UPGRADED — AI Swarm + Real-Time War Room + Satellite', 'color:#00f0ff;font-size:18px');
         }
 
         window.onload = launchNexus;
